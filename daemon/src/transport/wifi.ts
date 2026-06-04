@@ -21,4 +21,12 @@ export class WiFiTransport implements Transport {
   async heartbeat(daemonPort: number): Promise<void> {
     await this.fetchImpl(`${this.m5Url}/heartbeat?port=${daemonPort}`, { method: "POST" });
   }
+
+  async requestApproval(id: string, title: string, detail: string): Promise<void> {
+    await this.fetchImpl(`${this.m5Url}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, title, detail }),
+    });
+  }
 }
