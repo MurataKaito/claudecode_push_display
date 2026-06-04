@@ -10,3 +10,7 @@ export function serifFor(event: AppEvent): Serif {
       return { expr: "normal", text: "なのだ" };
   }
 }
+
+export function warnSerif(threshold: number): Serif {
+  return { expr: "worried", text: `もう ${threshold}％ つかったのだ、きをつけるのだ！` };
+}
