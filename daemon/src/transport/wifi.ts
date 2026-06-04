@@ -23,10 +23,9 @@ export class WiFiTransport implements Transport {
   }
 
   async requestApproval(id: string, title: string, detail: string): Promise<void> {
-    await this.fetchImpl(`${this.m5Url}/approve`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, title, detail }),
-    });
+    // mDNSでなくIP直指定でも確実に届くよう、ボディJSONではなくクエリパラメータで送る
+    // （M5側は /heartbeat /notify と同じ getParam で取り出す）。
+    const q = new URLSearchParams({ id, title, detail });
+    await this.fetchImpl(`${this.m5Url}/approve?${q.toString()}`, { method: "POST" });
   }
 }

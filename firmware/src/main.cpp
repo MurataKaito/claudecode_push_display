@@ -72,6 +72,7 @@ void loop() {
   // 承認要求の受信（最優先で画面を奪う）
   if (g_approve.ready) {
     g_approve.ready = false;
+    g_approveShown++;
     showApprove(g_approve.title, g_approve.detail);
     mode = MODE_APPROVE;
     approveDeadline = now + 30000;
@@ -80,21 +81,20 @@ void loop() {
   auto t = M5.Touch.getDetail();
   if (t.wasPressed()) gesture.down(now, t.x, t.y);
   if (t.wasReleased()) {
+    g_touchReleases++;
     Gesture g = gesture.up(now, t.x, t.y);
     if (mode == MODE_APPROVE) {
-      if (g == GESTURE_TAP || g == GESTURE_DOUBLETAP) {
-        postApproveResult("allow");
-        showNotify("happy", "ゴーサインなのだ！");
-        delay(1500);
-        showIdle();
-        mode = MODE_IDLE;
-      } else if (g == GESTURE_SWIPE) {
+      // 承認画面では寛容に：横スワイプ=拒否、それ以外のタッチ(長押し含む)=許可。
+      if (g == GESTURE_SWIPE) {
         postApproveResult("deny");
         showNotify("worried", "やめておくのだ");
-        delay(1500);
-        showIdle();
-        mode = MODE_IDLE;
+      } else {
+        postApproveResult("allow");
+        showNotify("happy", "ゴーサインなのだ！");
       }
+      delay(1500);
+      showIdle();
+      mode = MODE_IDLE;
     } else if (g == GESTURE_DOUBLETAP && mode == MODE_IDLE) {
       requestAndShowUsage();
     }

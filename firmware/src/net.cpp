@@ -3,13 +3,14 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
 
 PendingNotify g_notify;
 String g_daemonBase;
 PendingApprove g_approve;
+volatile int g_approveRecv = 0;
+volatile int g_approveShown = 0;
+volatile int g_touchReleases = 0;
 static AsyncWebServer server(80);
-static String approveBuf;
 
 // /notify?expr=&text=  body=WAVバイナリ
 static void onNotifyBody(AsyncWebServerRequest* req, uint8_t* data, size_t len,
@@ -50,26 +51,25 @@ void netBegin(const char* ssid, const char* pass) {
     String ip = req->client()->remoteIP().toString();
     int port = req->hasParam("port") ? req->getParam("port")->value().toInt() : 4920;
     g_daemonBase = "http://" + ip + ":" + String(port);
+    Serial.printf("[HB] daemon=%s\n", g_daemonBase.c_str());
     req->send(200, "application/json", "{\"ok\":true}");
   });
 
-  server.on(
-      "/approve", HTTP_POST,
-      [](AsyncWebServerRequest* req) { req->send(200, "application/json", "{\"ok\":true}"); },
-      nullptr,
-      [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
-        if (index == 0) approveBuf = "";
-        for (size_t i = 0; i < len; i++) approveBuf += (char)data[i];
-        if (index + len == total) {
-          JsonDocument doc;
-          if (deserializeJson(doc, approveBuf) == DeserializationError::Ok) {
-            g_approve.id = (const char*)(doc["id"] | "");
-            g_approve.title = (const char*)(doc["title"] | "CLAUDE OK?");
-            g_approve.detail = (const char*)(doc["detail"] | "");
-            g_approve.ready = true;
-          }
-        }
-      });
+  server.on("/approve", HTTP_POST, [](AsyncWebServerRequest* req) {
+    g_approve.id = req->hasParam("id") ? req->getParam("id")->value() : String("");
+    g_approve.title = req->hasParam("title") ? req->getParam("title")->value() : String("CLAUDE OK?");
+    g_approve.detail = req->hasParam("detail") ? req->getParam("detail")->value() : String("");
+    g_approve.ready = true;
+    g_approveRecv++;
+    req->send(200, "application/json", "{\"ok\":true}");
+  });
+
+  server.on("/state", HTTP_GET, [](AsyncWebServerRequest* req) {
+    String j = "{\"daemonBase\":\"" + g_daemonBase + "\",\"recv\":" + String(g_approveRecv) +
+               ",\"shown\":" + String(g_approveShown) + ",\"touch\":" + String(g_touchReleases) +
+               ",\"ready\":" + String(g_approve.ready ? 1 : 0) + ",\"lastId\":\"" + g_approve.id + "\"}";
+    req->send(200, "application/json", j);
+  });
 
   server.begin();
 }
