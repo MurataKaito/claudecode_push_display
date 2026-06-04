@@ -73,5 +73,12 @@ void netBegin(const char* ssid, const char* pass) {
     req->send(200, "application/json", j);
   });
 
+  server.on("/clip", HTTP_POST, [](AsyncWebServerRequest* req) {
+    String p = req->hasParam("p") ? req->getParam("p")->value() : String("look");
+    uint32_t ms = req->hasParam("ms") ? (uint32_t)req->getParam("ms")->value().toInt() : 4000;
+    displayForceClip(p, ms);
+    req->send(200, "application/json", "{\"ok\":true}");
+  });
+
   server.begin();
 }

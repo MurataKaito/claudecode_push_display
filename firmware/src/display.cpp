@@ -40,6 +40,7 @@ static String g_activePrefix = "look";
 static int g_activeFrames = 0;
 static String g_lastExpr = "";
 static uint32_t g_rotateAt = 0;
+static uint32_t g_forcedUntil = 0;
 
 static bool isBase(const String& e) { return e == "idle" || e == "normal" || e == "working"; }
 
@@ -133,15 +134,20 @@ void tickFace(const String& expr, const String& text) {
   g_lastMs = now;
   g_frame++;
 
-  if (expr != g_lastExpr) {
-    g_lastExpr = expr;
-    if (g_pngMode) selectClip(expr);
-    g_frame = 0;
-    g_rotateAt = now + 5000 + (uint32_t)random(4000);
-  } else if (g_pngMode && isBase(expr) && now > g_rotateAt) {
-    selectClip(expr);  // ベース状態は数秒ごとにプール内で切替（飽き防止）
-    g_frame = 0;
-    g_rotateAt = now + 5000 + (uint32_t)random(4000);
+  if (g_pngMode && now < g_forcedUntil) {
+    // /clip による強制表示中：選択ロジックをスキップ
+  } else {
+    if (g_forcedUntil != 0 && now >= g_forcedUntil) { g_forcedUntil = 0; g_lastExpr = ""; }
+    if (expr != g_lastExpr) {
+      g_lastExpr = expr;
+      if (g_pngMode) selectClip(expr);
+      g_frame = 0;
+      g_rotateAt = now + 5000 + (uint32_t)random(4000);
+    } else if (g_pngMode && isBase(expr) && now > g_rotateAt) {
+      selectClip(expr);  // ベース状態は数秒ごとにプール内で切替（飽き防止）
+      g_frame = 0;
+      g_rotateAt = now + 5000 + (uint32_t)random(4000);
+    }
   }
 
   g_cv.fillScreen(M5.Display.color565(15, 15, 15));
@@ -160,6 +166,13 @@ void tickFace(const String& expr, const String& text) {
   }
   drawTextBoxInto(text);
   g_cv.pushSprite(0, 0);
+}
+
+void displayForceClip(const String& prefix, uint32_t ms) {
+  g_activePrefix = prefix;
+  g_activeFrames = countOf(prefix.c_str());
+  g_frame = 0;
+  g_forcedUntil = millis() + ms;
 }
 
 String displayDebug() {
