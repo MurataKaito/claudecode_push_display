@@ -17,4 +17,8 @@ export class WiFiTransport implements Transport {
     });
     if (!res.ok) throw new Error(`notify failed: ${res.status}`);
   }
+
+  async heartbeat(daemonPort: number): Promise<void> {
+    await this.fetchImpl(`${this.m5Url}/heartbeat?port=${daemonPort}`, { method: "POST" });
+  }
 }
