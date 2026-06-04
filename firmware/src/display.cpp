@@ -168,7 +168,7 @@ void tickFace(const String& expr, const String& text) {
   }
   int lookDx = (now < g_lookEnd) ? g_lookDir * 4 : 0;
 
-  g_cv.fillScreen(TFT_BLACK);
+  g_cv.fillScreen(M5.Display.color565(15, 15, 15));  // PNG背景(#0f0f0f)と同色にして四角の縁を消す
   if (g_pngFrames > 0) renderPngFrame(g_frame);
   else renderCreature(expr, g_frame, hop, blink, lookDx);
   drawTextBoxInto(text);
