@@ -23,6 +23,13 @@ export function createServer(deps: ServerDeps): FastifyInstance {
     if (event.type === "working") {
       await deps.transport.setBase("working");
       reply.send({ ok: true });
+      // 応答後に非同期で「作業開始」発話（プロンプト送信をブロックしない）
+      (async () => {
+        try {
+          const wav = await deps.synth("おしごと、するのだ！");
+          await deps.transport.notify({ expr: "working", text: "おしごとちゅうなのだ", wav });
+        } catch {}
+      })();
       return;
     }
     if (event.type === "idle") {
@@ -67,6 +74,15 @@ export function createServer(deps: ServerDeps): FastifyInstance {
     const { decision } = (req.body ?? {}) as { decision?: Decision };
     const ok = decision ? deps.approvals.resolve(id, decision) : false;
     reply.send({ ok });
+    // 承認OK時は wink＋声「オッケーなのだ」（応答後に非同期）
+    if (decision === "allow") {
+      (async () => {
+        try {
+          const wav = await deps.synth("オッケーなのだ");
+          await deps.transport.notify({ expr: "wink", text: "オッケーなのだ", wav });
+        } catch {}
+      })();
+    }
   });
 
   return app;
