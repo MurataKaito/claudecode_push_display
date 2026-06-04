@@ -34,7 +34,8 @@ static void renderPngFrame(int frame) {
   if (buf) {
     f.read(buf, sz);
     f.close();
-    g_cv.drawPng(buf, sz, 160, 100, 0, 0, 0, 0, 1.0f, 0.0f, middle_center);
+    // フレームは200x200生成。顔エリア(320x200)に左上(60,0)＝水平中央・高さフィット。
+    g_cv.drawPng(buf, sz, 60, 0);
     free(buf);
   } else {
     f.close();
