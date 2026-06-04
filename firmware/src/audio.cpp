@@ -7,7 +7,7 @@ void audioBegin() {
   cfg.sample_rate = 24000;  // VOICEVOX 既定
   M5.Speaker.config(cfg);
   M5.Speaker.begin();
-  M5.Speaker.setVolume(180);
+  M5.Speaker.setVolume(255);  // 0-255。最大。
 }
 
 bool playWav(const uint8_t* data, size_t len) {
