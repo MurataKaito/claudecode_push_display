@@ -47,20 +47,23 @@ describe("WiFiTransport", () => {
     expect(seenMethod).toBe("POST");
   });
 
-  it("requestApproval は /approve に JSON を POST する", async () => {
+  it("requestApproval は /approve?id=&title=&detail= に POST する", async () => {
     let seenUrl = "";
-    let seenBody = "";
+    let seenMethod = "";
     const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
       seenUrl = url;
-      seenBody = String(init?.body ?? "");
+      seenMethod = init?.method ?? "";
       return new Response('{"ok":true}', { status: 200 });
     }) as unknown as typeof fetch;
 
     const t = new WiFiTransport("http://stackchan.local", fetchImpl);
     await t.requestApproval("id1", "CLAUDE BASH OK?", "ls -la");
 
-    expect(seenUrl).toBe("http://stackchan.local/approve");
-    const body = JSON.parse(seenBody);
-    expect(body).toEqual({ id: "id1", title: "CLAUDE BASH OK?", detail: "ls -la" });
+    expect(seenMethod).toBe("POST");
+    expect(seenUrl).toContain("http://stackchan.local/approve?");
+    const u = new URL(seenUrl);
+    expect(u.searchParams.get("id")).toBe("id1");
+    expect(u.searchParams.get("title")).toBe("CLAUDE BASH OK?");
+    expect(u.searchParams.get("detail")).toBe("ls -la");
   });
 });
