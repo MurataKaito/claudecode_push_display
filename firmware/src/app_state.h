@@ -11,3 +11,4 @@ struct PendingNotify {
 };
 
 extern PendingNotify g_notify;
+extern String g_daemonBase;  // 例: "http://172.20.10.5:4920"（heartbeatで学習）

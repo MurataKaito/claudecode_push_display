@@ -5,6 +5,7 @@
 #include <ESPAsyncWebServer.h>
 
 PendingNotify g_notify;
+String g_daemonBase;
 static AsyncWebServer server(80);
 
 // /notify?expr=&text=  body=WAVバイナリ
@@ -41,5 +42,13 @@ void netBegin(const char* ssid, const char* pass) {
     "/notify", HTTP_POST,
     [](AsyncWebServerRequest* req) { req->send(200, "application/json", "{\"ok\":true}"); },
     nullptr, onNotifyBody);
+
+  server.on("/heartbeat", HTTP_POST, [](AsyncWebServerRequest* req) {
+    String ip = req->client()->remoteIP().toString();
+    int port = req->hasParam("port") ? req->getParam("port")->value().toInt() : 4920;
+    g_daemonBase = "http://" + ip + ":" + String(port);
+    req->send(200, "application/json", "{\"ok\":true}");
+  });
+
   server.begin();
 }
