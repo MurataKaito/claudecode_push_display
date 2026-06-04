@@ -5,6 +5,8 @@ import { synth } from "./voicevox.js";
 import { saySynth } from "./sayfallback.js";
 import { getActiveBlock } from "./ccusage.js";
 import { computeUsage } from "./usage.js";
+import { startPoller } from "./poller.js";
+import { warnSerif } from "./serif.js";
 
 const cfg = loadConfig();
 const transport = new WiFiTransport(cfg.m5Url);
@@ -31,6 +33,21 @@ app
     const beat = () => transport.heartbeat(cfg.port).catch(() => {});
     beat();
     setInterval(beat, 15000);
+
+    startPoller(
+      {
+        getActiveBlock,
+        usageLimit: cfg.usageLimit,
+        thresholds: cfg.thresholds,
+        now: () => Date.now(),
+        onWarn: async (threshold) => {
+          const serif = warnSerif(threshold);
+          const wav = await synthFn(serif.text);
+          await transport.notify({ expr: serif.expr, text: serif.text, wav });
+        },
+      },
+      cfg.pollIntervalSec * 1000,
+    );
   })
   .catch((e) => {
     console.error(e);
