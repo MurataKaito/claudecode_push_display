@@ -9,17 +9,26 @@
 #include "gesture.h"
 
 static GestureDetector gesture;
-static uint32_t usageUntil = 0;  // この時刻(ms)までUSAGE表示
 
 enum Mode { MODE_IDLE, MODE_USAGE, MODE_APPROVE };
 static Mode mode = MODE_IDLE;
-static uint32_t approveDeadline = 0;
+static uint32_t usageUntil = 0, approveDeadline = 0, notifyUntil = 0, lastAnim = 0;
+static int animFrame = 0;
+static String curExpr = "normal";
+static String curText = "まってるのだ";
+
+static void backToIdle() {
+  mode = MODE_IDLE;
+  curExpr = "normal";
+  curText = "まってるのだ";
+  notifyUntil = 0;
+}
 
 static void requestAndShowUsage() {
   if (g_daemonBase.length() == 0) {
-    showNotify("worried", "まだつながってないのだ");
-    usageUntil = millis() + 2500;
-    mode = MODE_USAGE;
+    curExpr = "worried";
+    curText = "まだつながってないのだ";
+    notifyUntil = millis() + 2500;
     return;
   }
   HTTPClient http;
@@ -30,15 +39,15 @@ static void requestAndShowUsage() {
     JsonDocument doc;
     if (deserializeJson(doc, http.getString()) == DeserializationError::Ok) {
       showUsage(doc["percent"] | 0, doc["resetMin"] | 0);
-    } else {
-      showNotify("worried", "へんじがへんなのだ");
+      mode = MODE_USAGE;
+      usageUntil = millis() + 5000;
     }
   } else {
-    showNotify("worried", "しゅとくしっぱいなのだ");
+    curExpr = "worried";
+    curText = "しゅとくしっぱいなのだ";
+    notifyUntil = millis() + 2500;
   }
   http.end();
-  usageUntil = millis() + 5000;
-  mode = MODE_USAGE;
 }
 
 static void postApproveResult(const char* decision) {
@@ -61,15 +70,14 @@ void setup() {
   M5.Display.setCursor(0, 0);
   M5.Display.print("WiFi...");
   netBegin(WIFI_SSID, WIFI_PASS);
-  showIdle();
-  mode = MODE_IDLE;
+  backToIdle();
 }
 
 void loop() {
   M5.update();
   uint32_t now = millis();
 
-  // 承認要求の受信（最優先で画面を奪う）
+  // 承認要求（最優先で画面を奪う・静止表示）
   if (g_approve.ready) {
     g_approve.ready = false;
     g_approveShown++;
@@ -84,17 +92,17 @@ void loop() {
     g_touchReleases++;
     Gesture g = gesture.up(now, t.x, t.y);
     if (mode == MODE_APPROVE) {
-      // 承認画面では寛容に：横スワイプ=拒否、それ以外のタッチ(長押し含む)=許可。
       if (g == GESTURE_SWIPE) {
         postApproveResult("deny");
-        showNotify("worried", "やめておくのだ");
+        curExpr = "worried";
+        curText = "やめておくのだ";
       } else {
         postApproveResult("allow");
-        showNotify("happy", "ゴーサインなのだ！");
+        curExpr = "happy";
+        curText = "ゴーサインなのだ！";
       }
-      delay(1500);
-      showIdle();
       mode = MODE_IDLE;
+      notifyUntil = now + 1800;
     } else if (g == GESTURE_DOUBLETAP && mode == MODE_IDLE) {
       requestAndShowUsage();
     }
@@ -103,25 +111,26 @@ void loop() {
   // 通知（承認中は割り込ませない）
   if (g_notify.ready && mode != MODE_APPROVE) {
     g_notify.ready = false;
-    showNotify(g_notify.expr, g_notify.text);
+    curExpr = g_notify.expr;
+    curText = g_notify.text.length() ? g_notify.text : "おしらせなのだ";
     if (g_notify.wav && g_notify.wavLen > 0) playWav(g_notify.wav, g_notify.wavLen);
-    delay(3000);
-    showIdle();
     mode = MODE_IDLE;
-    usageUntil = 0;
+    notifyUntil = now + 4000;
   }
 
-  // USAGE自動復帰
+  // 通知/フィードバック表示の終了 → 通常へ
+  if (notifyUntil != 0 && now > notifyUntil) backToIdle();
   if (mode == MODE_USAGE && usageUntil != 0 && now > usageUntil) {
     usageUntil = 0;
-    showIdle();
-    mode = MODE_IDLE;
+    backToIdle();
   }
+  if (mode == MODE_APPROVE && now > approveDeadline) backToIdle();
 
-  // 承認タイムアウト（daemon側もtimeout→ask）
-  if (mode == MODE_APPROVE && now > approveDeadline) {
-    showIdle();
-    mode = MODE_IDLE;
+  // アニメ：IDLE中は連続でフレーム送り（USAGE/APPROVEは静止）
+  if (mode == MODE_IDLE && now - lastAnim > 150) {
+    lastAnim = now;
+    animFrame = (animFrame + 1) % 8;
+    drawFaceFrame(curExpr, curText, animFrame);
   }
 
   delay(10);
