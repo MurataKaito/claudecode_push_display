@@ -62,3 +62,24 @@ void showNotify(const String& expr, const String& text) {
   drawFace(expr);
   drawTextBox(text.length() ? text : "おしらせなのだ");
 }
+
+void showUsage(int percent, int resetMin) {
+  M5.Display.fillScreen(TFT_BLACK);
+  M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+  M5.Display.setTextDatum(middle_center);
+
+  // 大きな%表示
+  M5.Display.setTextSize(2);
+  M5.Display.drawString(String(percent) + "%", 160, 55);
+
+  // バーゲージ
+  const int x = 20, y = 95, w = 280, h = 30;
+  M5.Display.drawRect(x, y, w, h, TFT_WHITE);
+  int fill = (w - 2) * percent / 100;
+  uint16_t c = percent >= 80 ? TFT_RED : (percent >= 50 ? TFT_ORANGE : TFT_GREEN);
+  M5.Display.fillRect(x + 1, y + 1, fill, h - 2, c);
+
+  // リセットまでの時間
+  M5.Display.setTextSize(1);
+  M5.Display.drawString("あと " + String(resetMin) + "分でリセットなのだ", 160, 160);
+}
