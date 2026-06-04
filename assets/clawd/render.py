@@ -18,7 +18,7 @@ total = sum(f['hold'] for f in frames); cum=[]; t=0
 for f in frames: t += f['hold']; cum.append(t)
 def grid_at(ms):
     i = bisect.bisect_right(cum, ms % total); return frames[min(i, len(frames)-1)]['grid']
-N = max(1, min(24, round(total / dt))); step = total / N
+N = max(1, min(16, round(total / dt))); step = total / N
 CELL, SIZE = 10, 200
 os.makedirs(outdir, exist_ok=True)
 for fn in os.listdir(outdir):
@@ -35,5 +35,5 @@ for i in range(N):
             # 本家の inset影 を再現：セル色を~30%暗くした1pxの内枠（白系は枠なし）
             edge = rgb if max(rgb) > 235 else tuple(int(x*0.7) for x in rgb)
             d.rectangle([x0,y0,x0+CELL-1,y0+CELL-1], fill=rgb, outline=edge)
-    im.save(os.path.join(outdir, f'{prefix}{i}.png'))
+    im.save(os.path.join(outdir, f'{prefix}{i}.png'), optimize=True)  # RGB（LittleFSは3.5MBで余裕）
 print(f'{prefix:10s}: {N} frames (total={total}ms)')
