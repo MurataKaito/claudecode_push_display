@@ -69,16 +69,16 @@ Claude Code のライフサイクル全体に連動させた。**声はVOICEVOX�
 ### モーダル（全画面・他を奪う）
 | 画面 | 契機 | 操作 |
 |---|---|---|
-| USAGE(使用率ゲージ) | 待機中の**ダブルタップ** | 約5秒で復帰 |
+| USAGE(使用率ゲージ) | 待機中の**タップ（単/ダブル）** ※重いアニメで2連打を取りこぼすため単発でも可 | 約5秒で復帰 |
 | APPROVE(CLAUDE Bash OK?) | PreToolUse(Bash) | **タップ=許可 / スワイプ=拒否**、無操作30秒で復帰 |
 
 ## 5. データフロー（主要機能）
 - **完了通知**: Stop→hook→daemon`/event{done}`→VOICEVOX合成→M5`/notify`(WAV)→ダンス＋発話→`/base{idle}`。
-- **作業中**: UserPromptSubmit→`/event{working}`→`/base{working}`（声なし）。
-- **使用率表示**: M5ダブルタップ→M5がdaemon`/usage`をGET→ccusage集計%→ゲージ表示。
+- **作業中**: UserPromptSubmit→`/event{working}`→`/base{working}`＋**応答後に非同期でずんだ声「おしごと、するのだ！」**。
+- **使用率表示**: M5を**タップ（シングル/ダブルどちらでも）**→daemon`/usage`をGET→ccusage集計%→ゲージ表示。
 - **残量警告**: daemonポーラ(60s)→ccusage→閾値(50/80/95%)跨ぎ→`/notify{worried}`＋発話。
-- **タップ承認**: PreToolUse→`/approve{tool,cmd}`→daemonがid発行＋M5`/approve`push→M5承認画面→tap/swipe→M5が`/approve_result`返却→フックがポーリングしallow/deny出力（無操作はask）。
-- **注目**: Notification→`/event{attention}`→`/notify{surprised}`＋発話。
+- **タップ承認**: PreToolUse→`/approve{tool,cmd}`→daemonがid発行＋M5`/approve`push→M5承認画面→tap/swipe→M5が`/approve_result`返却→フックがポーリングしallow/deny出力。**OK時は wink＋ずんだ声「オッケーなのだ」（応答後に非同期）**。無操作はask。
+- **注目**: Notification→`/event{attention}`→`/notify{surprised}`＝**無音（surprise顔のみ。入力待ちの“呼び出し”合図）**。
 
 ## 6. インターフェイス仕様
 ### 母艦デーモン HTTP（:4920）
@@ -116,6 +116,18 @@ Notification→`notification.sh`(/event attention) / PreToolUse(matcher:Bash)→
 - daemonが **VOICEVOX(:50021, speaker=3 ずんだもん)** で `audio_query`→`synthesis`→WAV取得。失敗時 **macOS `say`+`afconvert`** で24kHz/16bit/mono WAVにフォールバック。
 - WAVをM5 `/notify` ボディで送り、M5が `parseWav`→`M5.Speaker.playRaw` で**自分のスピーカーから発話**（声の出所は常にM5）。
 - VOICEVOXは**Docker起動**: `docker run --rm -d -p 50021:50021 --name voicevox voicevox/voicevox_engine:cpu-latest`（イメージはキャッシュ済み）。停止 `docker stop voicevox`。
+
+### 音マップ（どの状態で喋るか）
+| 状態 | 声 | セリフ |
+|---|---|---|
+| 待機 idle | 🔇 無音 | — |
+| 入力待ち attention | 🔇 無音 | （surprise顔のみ＝呼び出し合図） |
+| 作業中 working | 🔊 | 「おしごと、するのだ！」 |
+| 完了 done | 🔊 | 「おしごと、おわったのだ！」 |
+| 残量警告 worried | 🔊 | 「もう○○％つかったのだ、きをつけるのだ！」 |
+| 承認OK wink | 🔊 | 「オッケーなのだ」 |
+
+→ 喋るのは working / done / worried / wink の4つ。待機・入力待ちは静か（机の上でうるさくない）。
 
 ## 9. 設定（環境変数, daemon）
 `ZUNDA_PORT`(4920) / `ZUNDA_M5_URL`(http://stackchan.local ※テザリングはIP直指定) / `ZUNDA_VOICEVOX_URL`(http://127.0.0.1:50021) /
