@@ -19,7 +19,7 @@ Claude Code の状態を、机上の **M5Stack Core2** のキャラが声＋画�
 | M4 残量警告 | daemonが閾値(50/80/95%)監視→声＋sleep顔 | ✅ |
 | M5 タップ承認 | PreToolUse→M5「CLAUDE Bash OK?」→タップ=許可/スワイプ=拒否 | ✅ |
 | Clawd表示(13クリップ) | ClaudePixの13アニメを状態プールで表示（実機ショーケース確認済み） | ✅ |
-| Phase B: 実イベント連携 | working状態＋UserPromptSubmit/Notification連携 | ⏳ 未 |
+| Phase B: 実イベント連携 | working状態＋UserPromptSubmit/Notification連携＋setBase | ✅ |
 
 ## 3. Clawd 表示パイプライン
 画面キャラは **ClaudePix（https://claudepix.vercel.app/）の20×20ドット絵アニメ13個**を移植。
@@ -80,14 +80,18 @@ M5はHTMLを描画できないので「フレーム抽出→PNG連番→ネイ�
 - 音声: **VOICEVOX:ずんだもん**
 - 画面キャラ: **ClaudePix**（claudepix.vercel.app）のドット絵を移植。明示ライセンス無し＝**個人デバイス用途・各自判断**。Clawd は Anthropic の Claude Code マスコット。素材はリポジトリにコミットしない（gitignore）。
 
-## 8. 次の一手（TODO）
-- [ ] **Phase B（実イベント連携）**：
-  - `UserPromptSubmit` フック → `POST /base?s=working`（作業中状態に。`/base` エンドポイント＋ `g_baseState` を新設）
-  - `Stop` → done演出後に `/base?s=idle`
-  - `Notification`（入力待ち）→ `/notify expr=surprised`
-  - 承認タップ → firmwareで `wink`（ローカル）
-  - `main.cpp` でベース(idle/working)＋一時overlayの2層に整理、settings.jsonにフック登録
-- [ ] アニメ速度/dtの調整（今180ms）と per-frame hold の忠実化
-- [ ] 驚き(surprised)の常用トリガ確定
-- [ ] launchdでdaemon常駐＋M5 IP自動解決
+## 8. Phase B（実装済み 2026-06-05）
+Claude Code のライフサイクル → Clawdの状態に連動：
+- `UserPromptSubmit` → daemon `/event{working}` → `setBase(working)`（coding/think）
+- `Stop` → `/event{done}` → done演出（dance＋声）→ `setBase(idle)`
+- `Notification` → `/event{attention}` → surprised＋声（overlay）
+- `PreToolUse(Bash)` → 承認画面（タップ=許可/スワイプ=拒否）
+- 承認タップ → firmwareで `wink`、残量低下(ポーラ) → worried(sleep)
+- フック4種登録済み: Stop / PreToolUse / UserPromptSubmit / Notification（`~/.claude/settings.json`）
+- daemonの `/event` は type で分岐: done/attention=声つき、working/idle=声なしsetBase。
+
+## 9. 残TODO（任意）
+- [ ] アニメ速度/dtの調整（今180ms固定）と per-frame hold の忠実化
+- [ ] launchdでdaemon常駐＋M5 IP自動解決（テザリングIP変動対策）
 - [ ] ブランチ仕上げ（mainマージ / PR）
+- [ ] VOICEVOX起動でずんだ声に（未起動時はsay）
