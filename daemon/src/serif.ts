@@ -1,4 +1,4 @@
-export type Expr = "normal" | "happy" | "worried" | "surprised";
+export type Expr = "normal" | "happy" | "worried" | "surprised" | "working" | "wink";
 export type AppEvent = { type: "done" | "working" | "idle" | "attention"; summary?: string };
 export type Serif = { expr: Expr; text: string };
 

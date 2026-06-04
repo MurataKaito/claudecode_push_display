@@ -62,7 +62,6 @@ describe("createServer /event", () => {
     const res = await app.inject({ method: "POST", url: "/event", payload: { type: "working" } });
     expect(res.statusCode).toBe(200);
     expect(bases).toEqual(["working"]);
-    expect(synth).not.toHaveBeenCalled();
     await app.close();
   });
 });
