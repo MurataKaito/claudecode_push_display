@@ -83,3 +83,20 @@ void showUsage(int percent, int resetMin) {
   M5.Display.setTextSize(1);
   M5.Display.drawString("あと " + String(resetMin) + "分でリセットなのだ", 160, 160);
 }
+
+void showApprove(const String& title, const String& detail) {
+  M5.Display.fillScreen(TFT_NAVY);
+  M5.Display.setTextColor(TFT_WHITE, TFT_NAVY);
+  M5.Display.setTextDatum(middle_center);
+
+  M5.Display.setTextSize(2);
+  M5.Display.drawString(title.length() ? title : "CLAUDE OK?", 160, 45);
+
+  M5.Display.setTextSize(1);
+  String d = detail;
+  if (d.length() > 38) d = d.substring(0, 37) + "…";
+  M5.Display.drawString(d, 160, 110);
+
+  M5.Display.setTextColor(TFT_GREENYELLOW, TFT_NAVY);
+  M5.Display.drawString("TAP = OK   /   SWIPE = NG", 160, 175);
+}
