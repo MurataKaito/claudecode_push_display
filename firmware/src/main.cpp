@@ -12,8 +12,7 @@ static GestureDetector gesture;
 
 enum Mode { MODE_IDLE, MODE_USAGE, MODE_APPROVE };
 static Mode mode = MODE_IDLE;
-static uint32_t usageUntil = 0, approveDeadline = 0, notifyUntil = 0, lastAnim = 0;
-static int animFrame = 0;
+static uint32_t usageUntil = 0, approveDeadline = 0, notifyUntil = 0;
 static String curExpr = "normal";
 static String curText = "まってるのだ";
 
@@ -126,12 +125,8 @@ void loop() {
   }
   if (mode == MODE_APPROVE && now > approveDeadline) backToIdle();
 
-  // アニメ：IDLE中は連続でフレーム送り（USAGE/APPROVEは静止）
-  if (mode == MODE_IDLE && now - lastAnim > 150) {
-    lastAnim = now;
-    animFrame = (animFrame + 1) % 8;
-    drawFaceFrame(curExpr, curText, animFrame);
-  }
+  // アイドル/通知中は生き生きアニメ（USAGE/APPROVEは静止）
+  if (mode == MODE_IDLE) tickFace(curExpr, curText);
 
   delay(10);
 }

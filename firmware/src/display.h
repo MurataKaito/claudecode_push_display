@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 void displayBegin();
-// 顔(アニメ1フレーム)＋下部テキストを描画してpush。frameを進めると動く。
-void drawFaceFrame(const String& expr, const String& text, int frame);
+// アイドル/通知時に毎ループ呼ぶ。内部で自前タイミング管理し、生き生きアニメを1tick描画。
+void tickFace(const String& expr, const String& text);
 void showUsage(int percent, int resetMin);
 void showApprove(const String& title, const String& detail);
