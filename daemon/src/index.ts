@@ -7,9 +7,11 @@ import { getActiveBlock } from "./ccusage.js";
 import { computeUsage } from "./usage.js";
 import { startPoller } from "./poller.js";
 import { warnSerif } from "./serif.js";
+import { Approvals } from "./approvals.js";
 
 const cfg = loadConfig();
 const transport = new WiFiTransport(cfg.m5Url);
+const approvals = new Approvals();
 
 async function synthFn(text: string): Promise<Buffer> {
   try {
@@ -24,6 +26,9 @@ const app = createServer({
   transport,
   synth: synthFn,
   getUsage: async () => computeUsage(await getActiveBlock(), cfg.usageLimit, Date.now()),
+  approvals,
+  approveTtlMs: cfg.approveTimeoutSec * 1000,
+  now: () => Date.now(),
 });
 
 app
