@@ -1,20 +1,23 @@
 #include "display.h"
 #include <M5Unified.h>
 #include <LittleFS.h>
+#include <string.h>
 
 static M5Canvas g_cv(&M5.Display);
 static bool g_cvReady = false;
 static bool g_pngMode = false;
 
-// アニメ用タイミング状態（コード描画フォールバック用も含む）
 static uint32_t g_lastMs = 0;
 static int g_frame = 0;
-static uint32_t g_nextBlink = 0, g_blinkEnd = 0;
-static uint32_t g_nextHop = 0, g_hopEnd = 0;
-static uint32_t g_nextLook = 0, g_lookEnd = 0;
+static uint32_t g_nextBlink = 0, g_blinkEnd = 0, g_nextHop = 0, g_hopEnd = 0, g_nextLook = 0, g_lookEnd = 0;
 static int g_lookDir = 0;
 
-// 状態→クリップ（LittleFS上の <prefix>0.png..）
+// 13クリップ（prefix）とフレーム数
+static const char* PFX[] = {"breathe", "blink", "look", "coding", "think", "bounce",
+                            "sway", "djmix", "bouncedj", "swaydj", "sleep", "surprise", "wink"};
+static const int NPFX = 13;
+static int g_cnt[NPFX] = {0};
+
 static int countFrames(const char* prefix) {
   int n = 0;
   for (int i = 0; i < 64; i++) {
@@ -23,30 +26,47 @@ static int countFrames(const char* prefix) {
   }
   return n;
 }
-static const char* HAPPY[] = {"djmix", "sway", "bouncedj", "swaydj"};
-static const int HAPPY_N = 4;
-static int idleN = 0, sleepN = 0, bounceN = 0, happyCnt[4] = {0, 0, 0, 0};
+static int countOf(const char* p) {
+  for (int i = 0; i < NPFX; i++) if (strcmp(PFX[i], p) == 0) return g_cnt[i];
+  return 0;
+}
 
-static String g_activePrefix = "idle";
+// プール定義
+static const char* POOL_IDLE[] = {"breathe", "blink", "look"};
+static const char* POOL_WORK[] = {"coding", "think"};
+static const char* POOL_DONE[] = {"bounce", "sway", "djmix", "bouncedj", "swaydj"};
+
+static String g_activePrefix = "look";
 static int g_activeFrames = 0;
 static String g_lastExpr = "";
+static uint32_t g_rotateAt = 0;
 
-// 状態に応じてクリップを選ぶ。happy（完了）はダンス数種からランダム。
+static bool isBase(const String& e) { return e == "idle" || e == "normal" || e == "working"; }
+
 static void selectClip(const String& expr) {
-  String p = "idle";
-  int n = idleN;
-  if (expr == "worried" && sleepN > 0) {
-    p = "sleep"; n = sleepN;
-  } else if (expr == "surprised" && bounceN > 0) {
-    p = "bounce"; n = bounceN;
-  } else if (expr == "happy") {
-    int avail[4], k = 0;
-    for (int i = 0; i < HAPPY_N; i++) if (happyCnt[i] > 0) avail[k++] = i;
-    if (k > 0) { int pick = avail[random(k)]; p = HAPPY[pick]; n = happyCnt[pick]; }
+  const char** pool;
+  int pn;
+  static const char* W[] = {"sleep"};
+  static const char* S[] = {"surprise"};
+  static const char* K[] = {"wink"};
+  if (expr == "working") { pool = POOL_WORK; pn = 2; }
+  else if (expr == "happy" || expr == "done") { pool = POOL_DONE; pn = 5; }
+  else if (expr == "worried") { pool = W; pn = 1; }
+  else if (expr == "surprised") { pool = S; pn = 1; }
+  else if (expr == "wink") { pool = K; pn = 1; }
+  else { pool = POOL_IDLE; pn = 3; }
+
+  const char* avail[5];
+  int k = 0;
+  for (int i = 0; i < pn; i++) if (countOf(pool[i]) > 0) avail[k++] = pool[i];
+  if (k > 0) {
+    const char* p = avail[random(k)];
+    g_activePrefix = p;
+    g_activeFrames = countOf(p);
+  } else {
+    g_activePrefix = "look";
+    g_activeFrames = countOf("look");
   }
-  if (n <= 0) { p = "idle"; n = idleN; }
-  g_activePrefix = p;
-  g_activeFrames = n;
 }
 
 static void renderPngFrame(int frame) {
@@ -57,14 +77,8 @@ static void renderPngFrame(int frame) {
   if (!f) return;
   size_t sz = f.size();
   uint8_t* buf = (uint8_t*)malloc(sz);
-  if (buf) {
-    f.read(buf, sz);
-    f.close();
-    g_cv.drawPng(buf, sz, 60, 0);  // 200x200を水平中央・高さフィット
-    free(buf);
-  } else {
-    f.close();
-  }
+  if (buf) { f.read(buf, sz); f.close(); g_cv.drawPng(buf, sz, 60, 0); free(buf); }
+  else f.close();
 }
 
 // PNGが無い時のコード描画フォールバック
@@ -79,38 +93,18 @@ static void renderCreature(const String& expr, int frame, int hop, bool blink, i
   for (int r = 1; r <= 7; r++)
     for (int c = 1; c <= 12; c++) g_cv.fillRect(ox + c * S, oy + r * S, S, S, clay);
   const int legCols[4] = {3, 6, 9, 12};
-  for (int k = 0; k < 4; k++) {
-    int len = ((k + frame) & 1) ? 1 : 2;
-    g_cv.fillRect(ox + legCols[k] * S, oy + 8 * S, S, len * S, clay);
+  for (int kk = 0; kk < 4; kk++) {
+    int len = ((kk + frame) & 1) ? 1 : 2;
+    g_cv.fillRect(ox + legCols[kk] * S, oy + 8 * S, S, len * S, clay);
   }
-  int wag = frame & 1;
-  if (expr == "happy") g_cv.fillRect(ox + 13 * S, oy + (0 + wag) * S, S, S, gray);
-  else if (expr == "worried") g_cv.fillRect(ox + 13 * S, oy + 8 * S, S, S, gray);
-  else g_cv.fillRect(ox + 13 * S, oy + (4 + wag) * S, S, S, gray);
   const int eyeY = oy + 3 * S + S / 2;
   const int eyeXs[2] = {ox + 4 * S + S / 2, ox + 9 * S + S / 2};
   for (int e = 0; e < 2; e++) {
     int ex = eyeXs[e];
-    if (blink) {
-      g_cv.fillRect(ex - 7, eyeY - 1, 14, 3, ink);
-    } else {
-      int rw = (expr == "surprised") ? 9 : 7;
-      int rp = (expr == "surprised") ? 5 : 4;
-      g_cv.fillCircle(ex, eyeY, rw, eyew);
-      g_cv.fillCircle(ex + lookDx, eyeY, rp, ink);
-    }
+    if (blink) g_cv.fillRect(ex - 7, eyeY - 1, 14, 3, ink);
+    else { g_cv.fillCircle(ex, eyeY, 7, eyew); g_cv.fillCircle(ex + lookDx, eyeY, 4, ink); }
   }
-  const int cx = 146;
-  const int my = oy + 5 * S + 7;
-  if (expr == "happy") {
-    g_cv.fillRect(cx - 12, my, 24, 3, ink);
-    g_cv.fillRect(cx - 14, my - 4, 4, 4, ink);
-    g_cv.fillRect(cx + 10, my - 4, 4, 4, ink);
-  } else if (expr == "surprised") {
-    g_cv.fillCircle(cx, my, 6, ink);
-  } else {
-    g_cv.fillRect(cx - 12, my - 2, 24, 4, ink);
-  }
+  g_cv.fillRect(146 - 12, oy + 5 * S + 5, 24, 4, ink);
 }
 
 static void drawTextBoxInto(const String& text) {
@@ -128,11 +122,8 @@ void displayBegin() {
   g_cv.setColorDepth(16);
   g_cvReady = (g_cv.createSprite(320, 240) != nullptr);
   g_cv.setFont(&fonts::lgfxJapanGothic_20);
-  idleN = countFrames("idle");
-  sleepN = countFrames("sleep");
-  bounceN = countFrames("bounce");
-  for (int i = 0; i < HAPPY_N; i++) happyCnt[i] = countFrames(HAPPY[i]);
-  g_pngMode = (idleN > 0);
+  for (int i = 0; i < NPFX; i++) g_cnt[i] = countFrames(PFX[i]);
+  g_pngMode = (countOf("look") > 0);
 }
 
 void tickFace(const String& expr, const String& text) {
@@ -142,27 +133,27 @@ void tickFace(const String& expr, const String& text) {
   g_lastMs = now;
   g_frame++;
 
-  // 状態変化でクリップ再選択（happyはランダム）、フレームリセット
   if (expr != g_lastExpr) {
     g_lastExpr = expr;
     if (g_pngMode) selectClip(expr);
     g_frame = 0;
+    g_rotateAt = now + 5000 + (uint32_t)random(4000);
+  } else if (g_pngMode && isBase(expr) && now > g_rotateAt) {
+    selectClip(expr);  // ベース状態は数秒ごとにプール内で切替（飽き防止）
+    g_frame = 0;
+    g_rotateAt = now + 5000 + (uint32_t)random(4000);
   }
 
   g_cv.fillScreen(M5.Display.color565(15, 15, 15));
   if (g_pngMode) {
     renderPngFrame(g_frame);
   } else {
-    // コード描画フォールバック（まばたき/視線/ジャンプ）
     if (now > g_nextBlink) { g_blinkEnd = now + 140; g_nextBlink = now + 2200 + (uint32_t)random(3200); }
     bool blink = now < g_blinkEnd;
     int hop = 0;
-    if (expr == "happy") { static const int8_t hb[4] = {0, -9, -3, 0}; hop = hb[g_frame & 3]; }
-    else {
-      if (now > g_nextHop) { g_hopEnd = now + 360; g_nextHop = now + 5000 + (uint32_t)random(6000); }
-      int rem = (int)(g_hopEnd - now);
-      if (rem > 0 && rem <= 360) { int prog = 360 - rem; hop = prog < 120 ? -prog/12 : prog < 240 ? -10 : -(360-prog)/12; }
-    }
+    if (now > g_nextHop) { g_hopEnd = now + 360; g_nextHop = now + 5000 + (uint32_t)random(6000); }
+    int rem = (int)(g_hopEnd - now);
+    if (rem > 0 && rem <= 360) { int prog = 360 - rem; hop = prog < 120 ? -prog / 12 : prog < 240 ? -10 : -(360 - prog) / 12; }
     if (now > g_nextLook) { g_lookEnd = now + 850; g_nextLook = now + 3800 + (uint32_t)random(4500); g_lookDir = (random(2) ? 1 : -1); }
     int lookDx = (now < g_lookEnd) ? g_lookDir * 4 : 0;
     renderCreature(expr, g_frame, hop, blink, lookDx);
@@ -172,9 +163,8 @@ void tickFace(const String& expr, const String& text) {
 }
 
 String displayDebug() {
-  String s = String("png=") + (g_pngMode ? 1 : 0) + " idle=" + idleN + " sleep=" + sleepN +
-             " bounce=" + bounceN + " active=" + g_activePrefix + " af=" + g_activeFrames + " happy=";
-  for (int i = 0; i < HAPPY_N; i++) s += String(happyCnt[i]) + (i < HAPPY_N - 1 ? "," : "");
+  String s = String("png=") + (g_pngMode ? 1 : 0) + " active=" + g_activePrefix + " af=" + g_activeFrames + " cnt=";
+  for (int i = 0; i < NPFX; i++) s += String(PFX[i]) + ":" + g_cnt[i] + (i < NPFX - 1 ? "," : "");
   return s;
 }
 
