@@ -30,7 +30,13 @@ export function createServer(deps: ServerDeps): FastifyInstance {
       reply.send({ ok: true });
       return;
     }
-    // 声つきイベント（done=完了, attention=入力待ち）
+    if (event.type === "attention") {
+      // 入力待ち：surprise顔だけ（声なし）。ダミーボディでアニメのみ出す（playWavは失敗→無音）
+      await deps.transport.notify({ expr: "surprised", text: "よばれてるのだ？", wav: Buffer.from("MUTE") });
+      reply.send({ ok: true });
+      return;
+    }
+    // 声つきイベント（done=完了）
     const serif = serifFor(event);
     const wav = await deps.synth(serif.text);
     await deps.transport.notify({ expr: serif.expr, text: serif.text, wav });
