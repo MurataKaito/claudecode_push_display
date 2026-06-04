@@ -1,5 +1,6 @@
 #include "net.h"
 #include "app_state.h"
+#include "display.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ESPAsyncWebServer.h>
@@ -67,7 +68,8 @@ void netBegin(const char* ssid, const char* pass) {
   server.on("/state", HTTP_GET, [](AsyncWebServerRequest* req) {
     String j = "{\"daemonBase\":\"" + g_daemonBase + "\",\"recv\":" + String(g_approveRecv) +
                ",\"shown\":" + String(g_approveShown) + ",\"touch\":" + String(g_touchReleases) +
-               ",\"ready\":" + String(g_approve.ready ? 1 : 0) + ",\"lastId\":\"" + g_approve.id + "\"}";
+               ",\"ready\":" + String(g_approve.ready ? 1 : 0) + ",\"lastId\":\"" + g_approve.id +
+               "\",\"dbg\":\"" + displayDebug() + "\"}";
     req->send(200, "application/json", j);
   });
 
