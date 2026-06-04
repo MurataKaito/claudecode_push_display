@@ -18,9 +18,7 @@ static String curText = "まってるのだ";
 
 static void backToIdle() {
   mode = MODE_IDLE;
-  curExpr = "normal";
-  curText = "まってるのだ";
-  notifyUntil = 0;
+  notifyUntil = 0;  // overlay解除。ベース(idle/working)は g_baseState が決める
 }
 
 static void requestAndShowUsage() {
@@ -97,8 +95,8 @@ void loop() {
         curText = "やめておくのだ";
       } else {
         postApproveResult("allow");
-        curExpr = "happy";
-        curText = "ゴーサインなのだ！";
+        curExpr = "wink";
+        curText = "オッケーなのだ";
       }
       mode = MODE_IDLE;
       notifyUntil = now + 1800;
@@ -117,16 +115,19 @@ void loop() {
     notifyUntil = now + 4000;
   }
 
-  // 通知/フィードバック表示の終了 → 通常へ
-  if (notifyUntil != 0 && now > notifyUntil) backToIdle();
+  // overlay(通知/フィードバック)の終了
+  if (notifyUntil != 0 && now >= notifyUntil) notifyUntil = 0;
   if (mode == MODE_USAGE && usageUntil != 0 && now > usageUntil) {
     usageUntil = 0;
     backToIdle();
   }
   if (mode == MODE_APPROVE && now > approveDeadline) backToIdle();
 
-  // アイドル/通知中は生き生きアニメ（USAGE/APPROVEは静止）
-  if (mode == MODE_IDLE) tickFace(curExpr, curText);
+  // 表示状態：overlay中はcurExpr、無ければベース(g_baseState: 0=idle/1=working)
+  bool overlay = (notifyUntil != 0 && now < notifyUntil);
+  String effExpr = overlay ? curExpr : (g_baseState == 1 ? "working" : "normal");
+  String effText = overlay ? curText : (g_baseState == 1 ? "おしごとちゅうなのだ" : "まってるのだ");
+  if (mode == MODE_IDLE) tickFace(effExpr, effText);
 
   delay(10);
 }
