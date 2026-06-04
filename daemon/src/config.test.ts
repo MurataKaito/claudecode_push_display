@@ -9,6 +9,7 @@ describe("loadConfig", () => {
       voicevoxUrl: "http://127.0.0.1:50021",
       speakerId: 3,
       m5Url: "http://stackchan.local",
+      usageLimit: 100_000_000,
     });
   });
 
@@ -23,5 +24,6 @@ describe("loadConfig", () => {
     expect(c.voicevoxUrl).toBe("http://localhost:60000");
     expect(c.speakerId).toBe(1);
     expect(c.m5Url).toBe("http://192.168.0.5");
+    expect(loadConfig({ ZUNDA_USAGE_LIMIT: "5000000" }).usageLimit).toBe(5_000_000);
   });
 });
