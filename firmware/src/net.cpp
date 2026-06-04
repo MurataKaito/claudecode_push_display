@@ -11,6 +11,7 @@ PendingApprove g_approve;
 volatile int g_approveRecv = 0;
 volatile int g_approveShown = 0;
 volatile int g_touchReleases = 0;
+volatile int g_baseState = 0;  // 0=idle / 1=working
 static AsyncWebServer server(80);
 
 // /notify?expr=&text=  body=WAVバイナリ
@@ -71,6 +72,12 @@ void netBegin(const char* ssid, const char* pass) {
                ",\"ready\":" + String(g_approve.ready ? 1 : 0) + ",\"lastId\":\"" + g_approve.id +
                "\",\"dbg\":\"" + displayDebug() + "\"}";
     req->send(200, "application/json", j);
+  });
+
+  server.on("/base", HTTP_POST, [](AsyncWebServerRequest* req) {
+    String s = req->hasParam("s") ? req->getParam("s")->value() : String("idle");
+    g_baseState = (s == "working") ? 1 : 0;
+    req->send(200, "application/json", "{\"ok\":true}");
   });
 
   server.on("/clip", HTTP_POST, [](AsyncWebServerRequest* req) {
