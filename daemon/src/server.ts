@@ -19,9 +19,22 @@ export function createServer(deps: ServerDeps): FastifyInstance {
 
   app.post("/event", async (req, reply) => {
     const event = req.body as AppEvent;
+    // ベース状態（声なし）
+    if (event.type === "working") {
+      await deps.transport.setBase("working");
+      reply.send({ ok: true });
+      return;
+    }
+    if (event.type === "idle") {
+      await deps.transport.setBase("idle");
+      reply.send({ ok: true });
+      return;
+    }
+    // 声つきイベント（done=完了, attention=入力待ち）
     const serif = serifFor(event);
     const wav = await deps.synth(serif.text);
     await deps.transport.notify({ expr: serif.expr, text: serif.text, wav });
+    if (event.type === "done") await deps.transport.setBase("idle"); // 完了後はidleへ
     reply.send({ ok: true });
   });
 
