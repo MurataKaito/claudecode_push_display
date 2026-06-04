@@ -10,6 +10,8 @@ describe("loadConfig", () => {
       speakerId: 3,
       m5Url: "http://stackchan.local",
       usageLimit: 100_000_000,
+      thresholds: [50, 80, 95],
+      pollIntervalSec: 60,
     });
   });
 
@@ -25,5 +27,7 @@ describe("loadConfig", () => {
     expect(c.speakerId).toBe(1);
     expect(c.m5Url).toBe("http://192.168.0.5");
     expect(loadConfig({ ZUNDA_USAGE_LIMIT: "5000000" }).usageLimit).toBe(5_000_000);
+    expect(loadConfig({ ZUNDA_THRESHOLDS: "30,70" }).thresholds).toEqual([30, 70]);
+    expect(loadConfig({ ZUNDA_POLL_SEC: "10" }).pollIntervalSec).toBe(10);
   });
 });
