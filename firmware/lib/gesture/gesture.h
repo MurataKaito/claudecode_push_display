@@ -15,7 +15,7 @@ class GestureDetector {
   int downX_ = 0;
   int downY_ = 0;
   uint32_t lastTapT_ = 0;
-  int swipeThresh_ = 40;
-  uint32_t doubleMs_ = 400;
-  uint32_t tapMaxMs_ = 300;
+  int swipeThresh_ = 55;
+  uint32_t doubleMs_ = 800;   // 2回目までの猶予（緩め）
+  uint32_t tapMaxMs_ = 700;   // 1タップの最長押下時間（緩め）
 };
