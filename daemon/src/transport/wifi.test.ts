@@ -66,4 +66,20 @@ describe("WiFiTransport", () => {
     expect(u.searchParams.get("title")).toBe("CLAUDE BASH OK?");
     expect(u.searchParams.get("detail")).toBe("ls -la");
   });
+
+  it("setBase は /base?s= に POST する", async () => {
+    let seenUrl = "";
+    let seenMethod = "";
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      seenUrl = url;
+      seenMethod = init?.method ?? "";
+      return new Response('{"ok":true}', { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const t = new WiFiTransport("http://stackchan.local", fetchImpl);
+    await t.setBase("working");
+
+    expect(seenUrl).toBe("http://stackchan.local/base?s=working");
+    expect(seenMethod).toBe("POST");
+  });
 });
