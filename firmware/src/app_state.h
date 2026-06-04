@@ -12,3 +12,11 @@ struct PendingNotify {
 
 extern PendingNotify g_notify;
 extern String g_daemonBase;  // 例: "http://172.20.10.5:4920"（heartbeatで学習）
+
+struct PendingApprove {
+  volatile bool ready = false;  // 表示すべき承認あり
+  String id;
+  String title;
+  String detail;
+};
+extern PendingApprove g_approve;

@@ -3,10 +3,13 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 
 PendingNotify g_notify;
 String g_daemonBase;
+PendingApprove g_approve;
 static AsyncWebServer server(80);
+static String approveBuf;
 
 // /notify?expr=&text=  body=WAVバイナリ
 static void onNotifyBody(AsyncWebServerRequest* req, uint8_t* data, size_t len,
@@ -49,6 +52,24 @@ void netBegin(const char* ssid, const char* pass) {
     g_daemonBase = "http://" + ip + ":" + String(port);
     req->send(200, "application/json", "{\"ok\":true}");
   });
+
+  server.on(
+      "/approve", HTTP_POST,
+      [](AsyncWebServerRequest* req) { req->send(200, "application/json", "{\"ok\":true}"); },
+      nullptr,
+      [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
+        if (index == 0) approveBuf = "";
+        for (size_t i = 0; i < len; i++) approveBuf += (char)data[i];
+        if (index + len == total) {
+          JsonDocument doc;
+          if (deserializeJson(doc, approveBuf) == DeserializationError::Ok) {
+            g_approve.id = (const char*)(doc["id"] | "");
+            g_approve.title = (const char*)(doc["title"] | "CLAUDE OK?");
+            g_approve.detail = (const char*)(doc["detail"] | "");
+            g_approve.ready = true;
+          }
+        }
+      });
 
   server.begin();
 }
