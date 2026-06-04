@@ -16,7 +16,7 @@ static int g_lookDir = 0;
 
 static int countPngFrames() {
   int n = 0;
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 64; i++) {
     if (LittleFS.exists("/clawd" + String(i) + ".png")) n++;
     else break;
   }
