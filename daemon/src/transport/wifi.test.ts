@@ -30,4 +30,20 @@ describe("WiFiTransport", () => {
       t.notify({ expr: "normal", text: "x", wav: Buffer.from([0]) }),
     ).rejects.toThrow(/notify failed/);
   });
+
+  it("heartbeat は /heartbeat?port= に POST する", async () => {
+    let seenUrl = "";
+    let seenMethod = "";
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      seenUrl = url;
+      seenMethod = init?.method ?? "";
+      return new Response('{"ok":true}', { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const t = new WiFiTransport("http://stackchan.local", fetchImpl);
+    await t.heartbeat(4920);
+
+    expect(seenUrl).toBe("http://stackchan.local/heartbeat?port=4920");
+    expect(seenMethod).toBe("POST");
+  });
 });
