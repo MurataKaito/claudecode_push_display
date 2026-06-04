@@ -46,4 +46,21 @@ describe("WiFiTransport", () => {
     expect(seenUrl).toBe("http://stackchan.local/heartbeat?port=4920");
     expect(seenMethod).toBe("POST");
   });
+
+  it("requestApproval は /approve に JSON を POST する", async () => {
+    let seenUrl = "";
+    let seenBody = "";
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      seenUrl = url;
+      seenBody = String(init?.body ?? "");
+      return new Response('{"ok":true}', { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const t = new WiFiTransport("http://stackchan.local", fetchImpl);
+    await t.requestApproval("id1", "CLAUDE BASH OK?", "ls -la");
+
+    expect(seenUrl).toBe("http://stackchan.local/approve");
+    const body = JSON.parse(seenBody);
+    expect(body).toEqual({ id: "id1", title: "CLAUDE BASH OK?", detail: "ls -la" });
+  });
 });
