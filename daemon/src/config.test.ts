@@ -12,6 +12,7 @@ describe("loadConfig", () => {
       usageLimit: 100_000_000,
       thresholds: [50, 80, 95],
       pollIntervalSec: 60,
+      approveTimeoutSec: 30,
     });
   });
 
@@ -29,5 +30,6 @@ describe("loadConfig", () => {
     expect(loadConfig({ ZUNDA_USAGE_LIMIT: "5000000" }).usageLimit).toBe(5_000_000);
     expect(loadConfig({ ZUNDA_THRESHOLDS: "30,70" }).thresholds).toEqual([30, 70]);
     expect(loadConfig({ ZUNDA_POLL_SEC: "10" }).pollIntervalSec).toBe(10);
+    expect(loadConfig({ ZUNDA_APPROVE_TIMEOUT_SEC: "5" }).approveTimeoutSec).toBe(5);
   });
 });

@@ -6,6 +6,7 @@ export type Config = {
   usageLimit: number;
   thresholds: number[];
   pollIntervalSec: number;
+  approveTimeoutSec: number;
 };
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -20,5 +21,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       .map((s) => Number(s.trim()))
       .filter((n) => !Number.isNaN(n)),
     pollIntervalSec: Number(env.ZUNDA_POLL_SEC ?? 60),
+    approveTimeoutSec: Number(env.ZUNDA_APPROVE_TIMEOUT_SEC ?? 30),
   };
 }
