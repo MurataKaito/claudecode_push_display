@@ -3,6 +3,10 @@
 Claude Code の状態を、机上の **M5Stack Core2**（キャラ「Clawd」）が **画面アニメ＋ずんだ声** で知らせるデスクトップ相棒の図面集。
 文章仕様は [`2026-06-05-system-design.md`](./2026-06-05-system-design.md) を参照。本書はそれを **図** にしたもの（Mermaid。GitHub / VS Code でそのまま描画）。
 
+> **画像版（PNG）**: [`diagrams/`](./diagrams/) に出力済み（単体で開ける）。
+> `diagram-1`=システム構成図 / `diagram-2`=状態3層 / `diagram-3`=状態遷移 /
+> `diagram-4`=完了通知 / `diagram-5`=タップ承認 / `diagram-6`=使用率 / `diagram-7`=残量警告
+
 ---
 
 ## 1. システム構成図
