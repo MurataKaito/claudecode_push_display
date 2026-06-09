@@ -88,6 +88,7 @@ void loop() {
   if (t.wasReleased()) {
     g_touchReleases++;
     Gesture g = gesture.up(now, t.x, t.y);
+    g_lastGesture = (int)g;
     if (mode == MODE_APPROVE) {
       if (g == GESTURE_SWIPE) {
         postApproveResult("deny");
@@ -100,8 +101,8 @@ void loop() {
       }
       mode = MODE_IDLE;
       notifyUntil = now + 1800;
-    } else if (g == GESTURE_DOUBLETAP && mode == MODE_IDLE) {
-      requestAndShowUsage();
+    } else if ((g == GESTURE_TAP || g == GESTURE_DOUBLETAP) && mode == MODE_IDLE) {
+      requestAndShowUsage();  // シングルタップでも使用率（重いアニメで2連打を取りこぼすため）
     }
   }
 
