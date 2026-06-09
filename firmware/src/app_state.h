@@ -24,3 +24,4 @@ extern volatile int g_approveRecv;   // /approve を受けた回数
 extern volatile int g_approveShown;  // main が承認画面を出した回数
 extern volatile int g_touchReleases; // タッチ離しを検出した回数
 extern volatile int g_baseState;     // ベース状態 0=idle / 1=working
+extern volatile int g_lastGesture;   // 最後のジェスチャ 0NONE/1TAP/2DOUBLE/3SWIPE
