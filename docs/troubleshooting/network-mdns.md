@@ -8,7 +8,7 @@ Mac（daemon）から M5 への通知が届かない・不安定になる問題�
 - **原因**: ESP32 の mDNS 実装は強くなく、特にテザリングのようなアドホックなネットワークでは応答が不安定になりやすい。加えて ESP32 は 2.4GHz 帯のみ対応で、iPhone テザリングは「互換性を優先」を ON にしないと 2.4GHz が有効にならない。
 - **対処**: 段階的に 3 つ。
 
-  1. **通信の堅牢化**: `/approve` への通知を JSON ボディから**クエリパラメータ方式**に変更（M5 側のボディ受信処理の方が壊れやすかったため）。コミット `e739a20`（`daemon/src/transport/wifi.ts`）
+  1. **通信の堅牢化**: `/approve` への通知を JSON ボディから**クエリパラメータ方式**に変更（M5 側のボディ受信処理の方が壊れやすかったため）。コミット `2619503`（`daemon/src/transport/wifi.ts`）
 
      ```ts
      // 変更前: POST + JSON body
@@ -17,7 +17,7 @@ Mac（daemon）から M5 への通知が届かない・不安定になる問題�
      await this.fetchImpl(`${this.m5Url}/approve?${q}`, { method: "POST" });
      ```
 
-  2. **IP 直指定の運用ガイド**: mDNS に頼らず M5 の IP を直接指定して daemon を起動する手順を README に明記。コミット `cc5d8db`
+  2. **IP 直指定の運用ガイド**: mDNS に頼らず M5 の IP を直接指定して daemon を起動する手順を README に明記。コミット `47babb8`
 
      ```bash
      ZUNDA_M5_URL=http://<M5のIP> npm run dev

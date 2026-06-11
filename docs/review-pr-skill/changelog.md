@@ -6,9 +6,9 @@ review-pr skill 導入に関する PR 別の変更履歴と、成果物・学び
 
 | PR | 内容 | 状態 | merge commit |
 |---|---|---|---|
-| #2 | `/review-pr` skill ＋ `pr-reviewer` agent 追加（本環境向け調整・絵文字なし・必須/推奨/任意/提案） | マージ済み | `544cee1` |
+| #2 | `/review-pr` skill ＋ `pr-reviewer` agent 追加（本環境向け調整・絵文字なし・必須/推奨/任意/提案） | マージ済み | `b2b4973` |
 | #1 | README 更新（レビュー**対象**） | open（レビュー投稿済み、指摘=任意1件） | - |
-| #3 | skill の `gh pr view` 無効フィールド修正 | マージ済み | `74468e9` |
+| #3 | skill の `gh pr view` 無効フィールド修正 | マージ済み | `b1b7abe` |
 | #4 | 設計・実装・導入の記録ドキュメント追加 | マージ済み | - |
 | #5 | 記録ドキュメントを用途別に細分割（本変更） | （この PR） | - |
 
@@ -18,7 +18,7 @@ review-pr skill 導入に関する PR 別の変更履歴と、成果物・学び
 
 - **不具合**: SKILL.md の Step 2 の `gh pr view --json` のフィールド列に、存在しない `baseRepository` / `headRepository` が含まれており、実行するとエラーになる（実レビュー時は手動で有効フィールドに直して回避した）。
 - **修正**: 無効フィールドを除去し、有効な `headRepository,headRepositoryOwner` に差し替え。owner/repo は `gh repo view --json nameWithOwner --jq .nameWithOwner` で確実に取得する手順を明記。
-- main から `fix/review-pr-gh-fields` を切り、PR #3 → squash マージ（fast-forward、`74468e9`）。
+- main から `fix/review-pr-gh-fields` を切り、PR #3 → squash マージ（fast-forward、`b1b7abe`）。
 
 ## 追加・変更したファイル
 

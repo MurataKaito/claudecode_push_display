@@ -1,6 +1,6 @@
 # review-pr skill の移植・カスタマイズ
 
-別プロジェクト由来の skill を本リポジトリへ移植し、環境に合わせて調整した記録（PR #2 / merge commit `544cee1`）。
+別プロジェクト由来の skill を本リポジトリへ移植し、環境に合わせて調整した記録（PR #2 / merge commit `b2b4973`）。
 
 ## 出発点
 
@@ -47,7 +47,7 @@
 
 ## マージ
 
-`gh pr create`（PR #2）→ `gh pr merge --squash --delete-branch`。main に `544cee1` として入った。
+`gh pr create`（PR #2）→ `gh pr merge --squash --delete-branch`。main に `b2b4973` として入った。
 
 ## 関連
 
