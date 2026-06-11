@@ -39,7 +39,7 @@ ClaudePix HTML ─ convert.mjs ─→ frames JSON ─ render.py ─→ PNG ─ u
   g_cv.drawPng(buf, sz, 60, 0);
   ```
 
-  コミット `689284d`（`firmware/src/display.cpp`）
+  コミット `a7d6d47`（`firmware/src/display.cpp`）
 - **発見・教訓**: M5Unified の `drawPng()` は引数の順序・datum 定数の意味が非自明。凝った位置指定に頼らず、絶対座標を自分で計算して渡す方が確実。
 
 ## 3. キャラの周囲に四角い縁が浮いて見える
@@ -54,7 +54,7 @@ ClaudePix HTML ─ convert.mjs ─→ frames JSON ─ render.py ─→ PNG ─ u
   g_cv.fillScreen(M5.Display.color565(15, 15, 15));  // PNG背景(#0f0f0f)と同色
   ```
 
-  コミット `1bb064f`（`firmware/src/display.cpp`）
+  コミット `ddd05b7`（`firmware/src/display.cpp`）
 - **発見・教訓**: 「黒」と「ほぼ黒」は実機の液晶では見分けられてしまう。素材の背景色と画面の塗り色は、論理名（TFT_BLACK）ではなく実値で揃える。
 
 ## 4. アニメ HTML の形式が 2 種類あり、片方が変換できない
@@ -67,7 +67,7 @@ ClaudePix HTML ─ convert.mjs ─→ frames JSON ─ render.py ─→ PNG ─ u
   初期の `convert.mjs` は `PRESET` しか見ておらず、`FRAMES` 形式で即エラー終了していた。
 - **対処**: 両形式を判定して取り込むよう拡張。`PRESET` があれば旧形式として固定パレット、無ければ `FRAMES`+`PAL` を読む。engine 加工が失敗しても処理を続けるフォールバックも追加。
 
-  コミット `dbf76a4`（`assets/clawd/convert.mjs`）
+  コミット `6fd6ddd`（`assets/clawd/convert.mjs`）
 - **発見・教訓**: 外部サービスのデータ形式は「最初に見たサンプル」が全てではない。形式判定とフォールバックを最初から想定しておくと、後から来る別形式に壊されない。
 
 ## 5. ドット絵がのっぺりして本家と違う
@@ -86,7 +86,7 @@ ClaudePix HTML ─ convert.mjs ─→ frames JSON ─ render.py ─→ PNG ─ u
   d.rectangle([x0, y0, x0+CELL-1, y0+CELL-1], fill=rgb, outline=edge)
   ```
 
-  コミット `513ccd1`（`assets/clawd/render.py`）
+  コミット `5076a3a`（`assets/clawd/render.py`）
 - **発見・教訓**: ドット絵の「らしさ」は色数と影（縁）の付け方で決まる。単に表示できるだけでは本家の見た目にならず、質感の再現（inset 影）まで含めて移植と言える。
 
 ## 6. 長いアニメがフレーム数上限に収まらない
@@ -97,7 +97,7 @@ ClaudePix HTML ─ convert.mjs ─→ frames JSON ─ render.py ─→ PNG ─ u
   ```python
   N = max(1, min(16, round(total / dt))); step = total / N
   ```
-- **対処**: 上限 16 フレーム + `optimize=True` で PNG を圧縮し容量に余裕を確保。コミット `513ccd1` / `43e77bf`（`assets/clawd/render.py`）
+- **対処**: 上限 16 フレーム + `optimize=True` で PNG を圧縮し容量に余裕を確保。コミット `5076a3a` / `671371a`（`assets/clawd/render.py`）
 - **発見・教訓**: 組込みでは「アニメの忠実度」と「フラッシュ容量・性能」のトレードオフが避けられない。dt 固定 + フレーム上限という割り切りで全クリップを同一速度に統一した。フレームごとの hold（表示時間）の忠実再現は TODO として残っている。
 
 ## 7. FS だけ更新するとキャラが出ない（ファームとの不整合）

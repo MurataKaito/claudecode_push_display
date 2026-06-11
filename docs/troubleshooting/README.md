@@ -23,15 +23,15 @@
 | # | 問題 | 一言でいうと | 決め手 | 詳細 |
 |---|---|---|---|---|
 | 1 | 「本物の Clawd」が載せられない | AI に再現を頼む構図が破綻、45 分膠着 | ClaudePix 発見 → MANIFEST から 13 クリップ自動取得 | clawd-display |
-| 2 | PNG が右下にずれて表示 | drawPng の datum 指定が効かない | 絶対座標 (60,0) 固定（`689284d`） | clawd-display |
-| 3 | キャラの周りに四角い縁 | TFT_BLACK と #0f0f0f の色差 | 背景色を実値で統一（`1bb064f`） | clawd-display |
-| 4 | DJ 系アニメが変換できない | HTML 形式が 2 種類あった | 両形式対応 + フォールバック（`dbf76a4`） | clawd-display |
-| 5 | ドット絵がのっぺり | inset 影なし・多色非対応 | パレット対応 + 影付け（`513ccd1`） | clawd-display |
+| 2 | PNG が右下にずれて表示 | drawPng の datum 指定が効かない | 絶対座標 (60,0) 固定（`a7d6d47`） | clawd-display |
+| 3 | キャラの周りに四角い縁 | TFT_BLACK と #0f0f0f の色差 | 背景色を実値で統一（`ddd05b7`） | clawd-display |
+| 4 | DJ 系アニメが変換できない | HTML 形式が 2 種類あった | 両形式対応 + フォールバック（`6fd6ddd`） | clawd-display |
+| 5 | ドット絵がのっぺり | inset 影なし・多色非対応 | パレット対応 + 影付け（`5076a3a`） | clawd-display |
 | 6 | 長いアニメが収まらない | LittleFS 容量との兼ね合い | フレーム上限 16 + PNG 圧縮 | clawd-display |
 | 7 | FS 更新後にキャラが出ない | FS とファームの名前不整合 | `/state` 診断 + セット更新を手順化 | clawd-display |
-| 8 | ダブルタップが反応しない | 閾値 + 描画負荷で取りこぼし | 閾値緩和 → シングルタップ化（`686fdb2` / `0010235`） | touch-gesture |
-| 9 | 承認画面で勝手に拒否 | タップ以外が暗黙の拒否に | スワイプのみ拒否に反転（`e739a20`） | touch-gesture |
-| 10 | M5 に通知が届かない（テザリング） | ESP32 の mDNS が不安定 | クエリパラメータ化 + IP 直指定（`e739a20` / `cc5d8db`） | network-mdns |
+| 8 | ダブルタップが反応しない | 閾値 + 描画負荷で取りこぼし | 閾値緩和 → シングルタップ化（`3dea589` / `2cd966c`） | touch-gesture |
+| 9 | 承認画面で勝手に拒否 | タップ以外が暗黙の拒否に | スワイプのみ拒否に反転（`2619503`） | touch-gesture |
+| 10 | M5 に通知が届かない（テザリング） | ESP32 の mDNS が不安定 | クエリパラメータ化 + IP 直指定（`2619503` / `47babb8`） | network-mdns |
 | 11 | USB で書き込めない | 充電専用ケーブル + ドック | データ線ありケーブルで直結 | hardware-environment |
 | 12 | VOICEVOX が入らない | brew に cask が無い | `say` で先に経路確認 → Docker 導入 | hardware-environment |
 
