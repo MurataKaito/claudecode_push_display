@@ -75,8 +75,16 @@ PR が見つからない場合は **エラーで終了**：
 ### 2. PR 情報の取得
 
 ```bash
-gh pr view <num> --json number,title,body,author,baseRefName,headRefName,files,additions,deletions,url,headRefOid,baseRepository,headRepository
+gh pr view <num> --json number,title,body,author,baseRefName,headRefName,files,additions,deletions,url,headRefOid,headRepository,headRepositoryOwner
 ```
+
+> 注意: `baseRepository` / `headRepository` というフィールドは `gh pr view --json` には**存在しない**（指定するとエラー）。リポジトリの owner/name は別途、以下で確実に取得する:
+>
+> ```bash
+> REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)   # 例: MurataKaito/claudecode_push_display
+> ```
+>
+> （`headRepositoryOwner.login` + `headRepository.name` からも組み立てられるが、fork PR でなければ `gh repo view` が最も確実）
 
 主要情報を整理:
 - PR タイトル、本文
@@ -84,7 +92,7 @@ gh pr view <num> --json number,title,body,author,baseRefName,headRefName,files,a
 - ベースブランチ、ヘッドブランチ
 - 変更ファイル一覧（path, additions, deletions）
 - ヘッドコミット SHA（インラインコメント投稿時に必要）
-- リポジトリ owner/name
+- リポジトリ owner/name（上記 `REPO`）
 
 ### 3. Diff の取得
 
