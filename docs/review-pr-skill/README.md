@@ -1,6 +1,6 @@
 # review-pr skill ドキュメント
 
-このディレクトリは、本リポジトリに追加した PR レビュー自動化の仕組み（`/review-pr` skill ＋ `pr-reviewer` subagent）について、**設計・実装・導入までの記録**をまとめたものです。
+このディレクトリは、本リポジトリに追加した PR レビュー自動化の仕組み（`/review-pr` skill ＋ `pr-reviewer` subagent）について、**設計・実装・導入までの記録**を用途別にまとめたもの。
 
 ## 何のための仕組みか
 
@@ -10,11 +10,22 @@ GitHub の Pull Request を Claude が**客観的にコードレビュー**し�
 
 ## ファイル構成（用途別）
 
-| ファイル | 用途 | 読む人 |
-|---|---|---|
-| [`design.md`](design.md) | 設計・アーキテクチャ・設計判断の根拠 | 仕組みを理解／改修する人 |
-| [`implementation-log.md`](implementation-log.md) | 導入から完成までの作業記録（ブランチ・PR・カスタマイズ・実レビュー・バグ修正） | 経緯を追う人／同様の移植をする人 |
-| この `README.md` | 概要・索引・最小限の使い方 | 最初に読む人 |
+設計（どう作られているか・なぜそうしたか）:
+
+| ファイル | 用途 |
+|---|---|
+| [`architecture.md`](architecture.md) | 目的・2役構成・責務分界・入力設計・親の不変条件 |
+| [`decisions.md`](decisions.md) | 設計判断の根拠（なぜ subagent に委譲、なぜ絵文字なし 等） |
+| [`output-format.md`](output-format.md) | 出力 JSON 契約・重大度モデル・投稿の安全設計 |
+| [`error-handling.md`](error-handling.md) | エラーハンドリング方針 |
+
+実装・導入（何をしたか）:
+
+| ファイル | 用途 |
+|---|---|
+| [`migration.md`](migration.md) | 別プロジェクトからの移植・環境調査・カスタマイズ（PR #2） |
+| [`review-run.md`](review-run.md) | 追加した skill で PR #1 を実レビューした記録 |
+| [`changelog.md`](changelog.md) | PR 別の変更履歴・成果物・学び・残課題 |
 
 実体（運用される定義ファイル）は本ディレクトリではなく以下にある:
 
@@ -38,5 +49,5 @@ GitHub の Pull Request を Claude が**客観的にコードレビュー**し�
 
 ## 関連
 
-- 元になった skill は別プロジェクト（社内 GitHub の Lambda/CDK 系リポジトリ）で運用していたものを、本リポジトリ向けに移植・調整した。経緯は [`implementation-log.md`](implementation-log.md) を参照。
+- 元になった skill は別プロジェクト（社内 GitHub の Lambda/CDK 系リポジトリ）で運用していたものを、本リポジトリ向けに移植・調整した。経緯は [`migration.md`](migration.md)。
 - このリポジトリの他の設計ドキュメント: `docs/superpowers/specs/`, `docs/superpowers/plans/`
