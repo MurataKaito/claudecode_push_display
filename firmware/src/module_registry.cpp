@@ -1,5 +1,9 @@
 #include "module_registry.h"
+#include "modules/notify/notify.h"
 
-// まだモジュールなし（後続タスクで追加）。nullptrは空配列を避ける番兵でCOUNT=0なら参照されない。
-Module* const MODULES[] = { nullptr };
-const size_t MODULE_COUNT = 0;
+static NotifyModule notifyModule;
+
+Module* const MODULES[] = {
+    &notifyModule,
+};
+const size_t MODULE_COUNT = sizeof(MODULES) / sizeof(MODULES[0]);
