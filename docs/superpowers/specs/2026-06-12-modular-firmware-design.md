@@ -55,7 +55,7 @@ struct Module {
   virtual const char* name() = 0;
   virtual void setup(Services& s) {}        // 起動時1回。HTTPルート登録・初期化
   virtual void loop(uint32_t now) {}        // 毎ループ呼ばれる
-  virtual bool onGesture(Gesture g) { return false; }  // trueで消費（後続に回さない）
+  virtual bool onGesture(Gesture g, uint32_t now) { return false; }  // trueで消費（後続に回さない）
   virtual void draw(uint32_t now) {}        // 画面を所有している間、毎ループ呼ばれる
   virtual void onScreenLost() {}            // 横取り・タイムアウトで画面を失ったとき
   virtual void appendState(String& json) {} // GET /state に診断フィールドを追記
@@ -71,13 +71,19 @@ core が所有するオブジェクトへの参照と、共有状態へのアク
 
 ```cpp
 struct Services {
-  AsyncWebServer& http;       // setup()内でのルート登録用
-  ScreenArbiter& screen;      // 画面要求・解放
-  int selfId;                 // レジストリ上の自分のID（screen要求時に使う）
-  const String& daemonBase(); // 例 "http://172.20.10.5:4920"。未学習なら空文字
-  int baseState();            // 0=idle / 1=working
+  AsyncWebServer* http;  // setup()内でのルート登録用
+  int selfId;            // レジストリ上の自分のID（画面調停で使う）
+
+  // 画面を要求。grantならtrue。別モジュールを横取りした場合は相手のonScreenLost()が呼ばれる
+  bool requestScreen(int priority, uint32_t timeoutMs, uint32_t now);
+  void releaseScreen();
+
+  const String& daemonBase() const;  // 例 "http://172.20.10.5:4920"。未学習なら空文字
+  int baseState() const;             // 0=idle / 1=working
 };
 ```
+
+ScreenArbiter を直接モジュールに見せず requestScreen/releaseScreen メソッドで包むのは、横取り発生時に被横取りモジュールへの `onScreenLost()` 通知（レジストリの知識が必要）を core 側で完結させるため。
 
 ## 画面調停（ScreenArbiter）
 
@@ -96,8 +102,8 @@ class ScreenArbiter {
 
 ### 調停ルール
 
-- grant条件: owner不在、または `新priority >= 現ownerのpriority`（同優先度は後勝ち）
-- priority割当: approve=100、notify=50、usage=50
+- grant条件: owner不在、同一ownerによる再request（自身の優先度変更・期限更新を含む。preempted通知なし）、または `新priority >= 現ownerのpriority`（同優先度は後勝ち）
+- priority割当: approve=100、notify=50、usage=50。操作後のフィードバック顔（「オッケーなのだ」1.8秒、「しゅとくしっぱいなのだ」2.5秒等）は50（現行どおり通知やタップで上書き可能にするため、approveもフィードバック時は50に自己降格する）
 - owner不在のとき core がアイドル顔を描く: `tickFace(baseStateに応じたexpr, text)`（働き中なら working/「おしごとちゅうなのだ」、待機なら normal/「まってるのだ」）
 
 この割当は現行の挙動をそのまま再現する：
