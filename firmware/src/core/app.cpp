@@ -78,14 +78,8 @@ void appLoop() {
 
   for (size_t i = 0; i < MODULE_COUNT; i++) MODULES[i]->loop(now);
 
-  // 描画: ownerがいればそのdraw()、いなければベース顔（baseState連動）
+  // 描画: ownerのdraw()を呼ぶ。ベース顔はclawdモジュール(優先度0背景)が描く
   int own = arbiter.owner();
-  if (own >= 0) {
-    MODULES[own]->draw(now);
-  } else {
-    bool working = netBaseState() == 1;
-    tickFace(working ? "working" : "normal",
-             working ? "おしごとちゅうなのだ" : "まってるのだ");
-  }
+  if (own >= 0) MODULES[own]->draw(now);
   delay(10);
 }

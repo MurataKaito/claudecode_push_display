@@ -1,7 +1,6 @@
 #include "core/net_core.h"
 #include "core/app.h"
 #include "module_registry.h"
-#include "display.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
@@ -37,19 +36,13 @@ void netCoreBegin(const char* ssid, const char* pass) {
     req->send(200, "application/json", "{\"ok\":true}");
   });
 
-  server.on("/clip", HTTP_POST, [](AsyncWebServerRequest* req) {
-    String p = req->hasParam("p") ? req->getParam("p")->value() : String("look");
-    uint32_t ms = req->hasParam("ms") ? (uint32_t)req->getParam("ms")->value().toInt() : 4000;
-    displayForceClip(p, ms);
-    req->send(200, "application/json", "{\"ok\":true}");
-  });
-
   // core分のフィールド + 各モジュールのappendState()を連結（既存キーは名前・型とも維持）
+  // ※ /clip と dbg は clawd モジュールへ移設済み
   server.on("/state", HTTP_GET, [](AsyncWebServerRequest* req) {
     String j = "{\"daemonBase\":\"" + daemonBase + "\",\"touch\":" + String(appTouchReleases()) +
                ",\"g\":" + String(appLastGesture());
     for (size_t i = 0; i < MODULE_COUNT; i++) MODULES[i]->appendState(j);
-    j += ",\"dbg\":\"" + displayDebug() + "\"}";
+    j += "}";  // dbg は clawd の appendState() が追記する
     req->send(200, "application/json", j);
   });
 }
