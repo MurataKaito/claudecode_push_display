@@ -11,5 +11,12 @@ class ClawdModule : public Module {
   void appendState(String& json) override;  // dbg（displayDebug()）を出力
 
  private:
+  // /clip 受信(asyncタスク)→loop()受け渡し。描画はasyncハンドラでせず、pendingに積む作法。
+  struct PendingClip {
+    volatile bool ready = false;  // 最後に立てる
+    String prefix;
+    uint32_t ms = 4000;
+  };
+  PendingClip pendingClip_;
   Services* svc_ = nullptr;
 };

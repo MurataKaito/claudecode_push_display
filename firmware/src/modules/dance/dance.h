@@ -8,6 +8,7 @@ class DanceModule : public Module {
   void setup(Services& s) override;
   void loop(uint32_t now) override;
   void draw(uint32_t now) override;
+  void onScreenLost() override;  // 横取り/演出終了時、自分が張った強制クリップを畳む
 
  private:
   struct Pending {
@@ -17,4 +18,5 @@ class DanceModule : public Module {
   };
   Pending pending_;
   Services* svc_ = nullptr;
+  bool forced_ = false;  // clip指定でdisplayForceClipを張ったか（解除の対象判定用）
 };

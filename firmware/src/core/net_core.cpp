@@ -37,7 +37,6 @@ void netCoreBegin(const char* ssid, const char* pass) {
   });
 
   // core分のフィールド + 各モジュールのappendState()を連結（既存キーは名前・型とも維持）
-  // ※ /clip と dbg は clawd モジュールへ移設済み
   server.on("/state", HTTP_GET, [](AsyncWebServerRequest* req) {
     String j = "{\"daemonBase\":\"" + daemonBase + "\",\"touch\":" + String(appTouchReleases()) +
                ",\"g\":" + String(appLastGesture());

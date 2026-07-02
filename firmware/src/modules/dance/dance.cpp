@@ -19,10 +19,22 @@ void DanceModule::loop(uint32_t now) {
   if (!svc_->requestScreen(40, pending_.ms, now)) return;
   pending_.ready = false;
   // clip指定時のみ強制クリップ。未指定はdraw()のtickFace("done")がdoneプールから選ぶ。
-  if (pending_.clip.length()) displayForceClip(pending_.clip, pending_.ms);
+  if (pending_.clip.length()) {
+    displayForceClip(pending_.clip, pending_.ms);
+    forced_ = true;
+  }
 }
 
 void DanceModule::draw(uint32_t now) {
   // 画面所有中のみ呼ばれる。timeout(ms)満了でclawdが背景を取り戻しidle/workingへ復帰。
   tickFace("done", "おどるのだ");
+}
+
+// 横取り(notify/approve)・タイムアウトのどちらでも呼ばれる。自分が張った強制クリップを畳み、
+// 後続オーナー(通知顔・clawdベース顔)にダンスクリップが漏れないようにする。
+void DanceModule::onScreenLost() {
+  if (forced_) {
+    displayClearForced();
+    forced_ = false;
+  }
 }

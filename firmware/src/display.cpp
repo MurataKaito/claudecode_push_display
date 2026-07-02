@@ -175,6 +175,12 @@ void displayForceClip(const String& prefix, uint32_t ms) {
   g_forcedUntil = millis() + ms;
 }
 
+// 強制クリップを即解除。次のtickFace()でexprに応じてクリップが選び直される。
+void displayClearForced() {
+  g_forcedUntil = 0;
+  g_lastExpr = "";  // 次tickで必ずselectClip()が走るようにする
+}
+
 String displayDebug() {
   String s = String("png=") + (g_pngMode ? 1 : 0) + " active=" + g_activePrefix + " af=" + g_activeFrames + " cnt=";
   for (int i = 0; i < NPFX; i++) s += String(PFX[i]) + ":" + g_cnt[i] + (i < NPFX - 1 ? "," : "");
