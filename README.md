@@ -85,6 +85,7 @@ docs/superpowers/ … 設計書(specs)・設計図(diagrams)・実装計画(plan
 ## ドキュメント
 - 設計書（アーキ/状態マシン/I/F/パイプライン/制約）: [`docs/superpowers/specs/2026-06-05-system-design.md`](docs/superpowers/specs/2026-06-05-system-design.md)
 - 設計図（構成図/状態マシン/シーケンス図, PNG付き）: [`docs/superpowers/specs/2026-06-08-architecture-diagrams.md`](docs/superpowers/specs/2026-06-08-architecture-diagrams.md)
+- ファームウェアのモジュール構造と追加手順: [`docs/firmware-modules.md`](docs/firmware-modules.md)
 
 ## クレジット
 - 音声: **VOICEVOX:ずんだもん**
